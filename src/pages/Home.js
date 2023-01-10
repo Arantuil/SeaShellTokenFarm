@@ -8,6 +8,9 @@ import shell from '../assets/shell.png';
 import shellcoin from '../assets/shellcoin.png';
 import walleticon from '../assets/walleticon.png';
 import susucoin from '../assets/susu.png';
+import synthetix from '../assets/synthetix.png';
+import useColorChange from 'use-color-change';
+import store from '../redux/store';
 
 const Home = () => {
     /* global BigInt */
@@ -16,7 +19,8 @@ const Home = () => {
     const data = useSelector((state) => state.data);
     const [CONFIG, SET_CONFIG] = useState({
         CONTRACT_ADDRESS: "",
-        SCAN_LINK: "",
+        CONTRACT_ADDRESS_SHL: "",
+        CONTRACT_ADDRESS_CLP: "", 
         NETWORK: {
             NAME: "",
             SYMBOL: "",
@@ -69,23 +73,69 @@ const Home = () => {
     const [userStakedCLP, setUserStakedCLP] = useState("?");
     const [apyPercentage, setApyPercentage] = useState("?%");
 
-
-    console.log(data)
-    //console.log(blockchain)
-
     const hexToDecimal = hex => parseInt(hex, 16);
+    const [userSHLBalance, setUserSHLBalance] = useState(0)
+    const getUserSHLBalance = async () => {
+        if (blockchain.account !== "") {
+            const response = await fetch(
+                `https://volta-explorer.energyweb.org/api?module=account&action=tokenbalance&contractaddress=${CONFIG.CONTRACT_ADDRESS_SHL}&address=${String(blockchain.account)}`
+            ).then((response) => response.json());
+            setUserSHLBalance((hexToDecimal(response["result"])/1000000000000000000).toFixed(2));
+        }
+    };
     const [userCLPBalance, setUserCLPBalance] = useState(0)
     const getUserCLPBalance = async () => {
         if (blockchain.account !== "") {
             const response = await fetch(
-                `https://explorer.energyweb.org/api?module=account&action=tokenbalance&contractaddress=${CONFIG.CONTRACT_ADDRESS}&address=${String(blockchain.account)}`
+                `https://volta-explorer.energyweb.org/api?module=account&action=tokenbalance&contractaddress=${CONFIG.CONTRACT_ADDRESS_CLP}&address=${String(blockchain.account)}`
             ).then((response) => response.json());
-            setUserCLPBalance(hexToDecimal(response["result"])/1000000000000000000);
+            setUserCLPBalance((hexToDecimal(response["result"])/1000000000000000000).toFixed(2));
         }
     };
     useEffect(() => {
+        getUserSHLBalance();
         getUserCLPBalance();
     }, [blockchain.account, CONFIG]);
+
+    async function getEarnedRewards() {
+        try {
+            console.log(data.account)
+            let earned = await store
+                .getState()
+                .blockchain.smartContract.methods.earned(String(data.account))
+                .call();
+            setUserEarnedSHL((earned / 1000000000000000000).toFixed(10))
+        } catch (error) {
+            return;
+        }
+    }
+
+    setInterval(function () {
+        getEarnedRewards();
+    }, 3000);
+
+    async function getStakedCLP() {
+        try {
+            console.log(data.account)
+            let stakedCLP = await store
+                .getState()
+                .blockchain.smartContract.methods.balanceOf(String(data.account))
+                .call();
+                setUserStakedCLP((stakedCLP / 1000000000000000000).toFixed(6))
+        } catch (error) {
+            return;
+        }
+    }
+
+    setInterval(function () {
+        getStakedCLP();
+    }, 3000);
+
+    const colorStyle = useColorChange(userEarnedSHL, {
+        higher: "limegreen",
+        lower: "crimson",
+        duration: 2000
+    });
 
     useEffect(() => {
         if (parseInt(data.clpAllowance) > 100000000000000000) {
@@ -95,6 +145,8 @@ const Home = () => {
 
     console.log(blockchain.account)
     console.log(userCLPBalance)
+
+    console.log(data)
 
     async function approveSHLCLPtoContract() {
         let approveAmount = BigInt(10e+25);
@@ -109,11 +161,24 @@ const Home = () => {
             })
     }
 
-    async function stakeCustomAmount() {
-        let customAmountCLP = document.getElementById('customAmountCLP').value
+    async function claimAllLPRewards() {
         let cost = 0;
         let totalCostWei = String(cost);
-        blockchain.smartContract.methods.stake(parseFloat(customAmountCLP))
+        blockchain.smartContract.methods.getReward()
+            .send({
+                to: CONFIG.CONTRACT_ADDRESS,
+                from: blockchain.account,
+                value: totalCostWei,
+                gasPrice: 100000000,
+            })
+    }
+
+    async function stakeCustomAmount() {
+        let customAmountCLP = document.getElementById('customAmountCLP').value
+        customAmountCLP = customAmountCLP * 1e+18;
+        let cost = 0;
+        let totalCostWei = String(cost);
+        blockchain.smartContract.methods.stake(String(customAmountCLP))
             .send({
                 to: CONFIG.CONTRACT_ADDRESS,
                 from: blockchain.account,
@@ -127,7 +192,7 @@ const Home = () => {
         let customAmountCLP = document.getElementById('customAmountCLP').value
         let cost = 0;
         let totalCostWei = String(cost);
-        blockchain.smartContract.methods.stake(parseFloat(customAmountCLP))
+        blockchain.smartContract.methods.stake(String(customAmountCLP))
             .send({
                 to: CONFIG.CONTRACT_ADDRESS,
                 from: blockchain.account,
@@ -154,7 +219,7 @@ const Home = () => {
         <div className="flex flex-col mx-auto w-[96%] md:w-[88%] lg:w-[83%] xl:w-[76%] min-h-[100vh] py-4 sm:py-8 md:py-12 lg:py-16">
             <img className='bgimg fixed top-0 left-0 w-full h-full object-cover z-[-1]' src={bgimg} alt="the background image" />
 
-            <div className='rounded-xl sm:rounded-2xl 3xs:px-[2px] 2xs:px-1 xs:px-2 s:px-3 px-4 2xs:py-3 xs:py-4 s:py-6 py-8 flex flex-col bg-[rgb(245,245,255)]'>
+            <div className='rounded-xl sm:rounded-2xl 3xs:px-[2px] 2xs:px-1 xs:px-2 s:px-3 px-4 pt-6 sm:pt-8 pb-20 md:pb-16 flex flex-col bg-[rgb(245,245,255)]'>
                 {blockchain.account === "" || blockchain.smartContract === null ? (
                 <div> {/* Unconnected */}
                     <h1 className='mb-1 sm:mb-2 md:mb-3 text-lg md:text-xl lg:text-2xl text-center'>Welcome to the <img></img>SeaShell<img className='inline h-6 w-6 ml-1 -translate-y-[2px]' src={shellcoin} alt="" /> liquidity farm!</h1>
@@ -198,6 +263,9 @@ const Home = () => {
                             <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center px-2'>You first have to connect with your Metamask</h1>
                         </div>
                     </div>
+                    <div className='w-full flex justify-center'>
+                        <p className='3xs:text-xs xs:text-sm text-base absolute z-[300] translate-y-7 translate-x-2 text-center'>Powered by Synthetix <img className='inline aspect-square w-5' src={synthetix} /></p>
+                    </div>
                 </div>
                 ) : (
                 <div className='p-2 sm:p-3 md:p-4'> {/* Connected */}
@@ -226,7 +294,11 @@ const Home = () => {
                                 </div>
                                 {userHasApprovedCLP === true ? (
                             <div>
-                                <button className='my-1 2xs:my-[3px] 3xs:my-[2px] flex flex-row mx-auto bg-green-300 hover:brightness-110 rounded-xl sm:rounded-2xl md:rounded-2xl p-1 sm:p-2 md:p-3'>
+                                <div className='flex flex-col mx-auto mb-1'>
+                                    <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>Your SHL balance: {userSHLBalance}</h1>
+                                    <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>Your CLP balance: {userCLPBalance}</h1>
+                                </div>
+                                <button onClick={claimAllLPRewards} className='my-1 2xs:my-[3px] 3xs:my-[2px] flex flex-row mx-auto bg-green-300 hover:brightness-110 rounded-xl sm:rounded-2xl md:rounded-2xl p-1 sm:p-2 md:p-3'>
                                     <h1 className='2xs:text-xs xs:text-sm text-base md:text-lg lg:text-xl text-center font-semibold flex my-auto'>Claim all rewards</h1>
                                     <div className='flex flex-row mx-auto'>
                                         <img className='2xs:h-5 2xs:w-5 xs:h-6 xs:w-6 h-7 w-7 ml-1 xs:ml-[3px]' src={shellcoin} alt="" />
@@ -234,7 +306,7 @@ const Home = () => {
                                 </button>
                                 <div className='xs:my-[1px] s:my-[2px] my-[3px] flex flex-col'>
                                     <div className='flex flex-col mx-auto mb-1'>
-                                        <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>Your earned SHL: {userEarnedSHL}</h1>
+                                        <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>Your earned SHL: <span style={colorStyle}>{userEarnedSHL}</span></h1>
                                         <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>Your amount of staked CLP: {userStakedCLP}</h1>
                                         <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>APY: {apyPercentage}</h1>
                                     </div>
@@ -245,16 +317,18 @@ const Home = () => {
                                             <img className='2xs:h-5 2xs:w-5 xs:h-6 xs:w-6 h-7 w-7 -translate-x-[6px]' src={shellcoin} alt="" />
                                         </div>
                                     </button>
-                                    <button onClick={stakeCustomAmount} className='my-1 2xs:my-[3px] 3xs:my-[2px] flex flex-row mx-auto bg-green-300 hover:brightness-110 rounded-xl sm:rounded-2xl md:rounded-2xl p-1 sm:p-2 md:p-3'>
-                                        <input id='customAmountCLP' placeholder='amount to stake' className='s:w-[160px] xs:w-[145px] 2xs:w-[125px] my-auto ml-1 mr-2 xs:mr-1 2xs:mx-[3px] 3xs:mx-[2px] rounded-md px-1 s:px-[3px] xs:px-[2px] 2xs:px-[1px]' type="text" />
-                                        <div className='flex flex-row my-auto'>
-                                            <h1 className='2xs:text-xs xs:text-sm text-base md:text-lg lg:text-xl text-center font-semibold flex my-auto'>Stake CLP</h1>
-                                            <div className='flex flex-row mx-auto'>
-                                                <img className='2xs:h-5 2xs:w-5 xs:h-6 xs:w-6 h-7 w-7 translate-x-[6px]' src={EWTlogo} alt="" />
-                                                <img className='2xs:h-5 2xs:w-5 xs:h-6 xs:w-6 h-7 w-7 -translate-x-[6px]' src={shellcoin} alt="" />
+                                    <div className='flex flex-row'>
+                                        <input id='customAmountCLP' placeholder='amount to stake' className='border-gray-600 border-[3px] s:w-[160px] xs:w-[145px] 2xs:w-[125px] my-auto ml-1 mr-2 xs:mr-1 2xs:mx-[3px] 3xs:mx-[2px] rounded-md px-1 s:px-[3px] xs:px-[2px] 2xs:px-[1px]' type="text" />
+                                        <button onClick={stakeCustomAmount} className='my-1 2xs:my-[3px] 3xs:my-[2px] flex flex-row mx-auto bg-green-300 hover:brightness-110 rounded-xl sm:rounded-2xl md:rounded-2xl p-1 sm:p-2 md:p-3'>
+                                            <div className='flex flex-row my-auto'>
+                                                <h1 className='2xs:text-xs xs:text-sm text-base md:text-lg lg:text-xl text-center font-semibold flex my-auto'>Stake CLP</h1>
+                                                <div className='flex flex-row mx-auto'>
+                                                    <img className='2xs:h-5 2xs:w-5 xs:h-6 xs:w-6 h-7 w-7 translate-x-[6px]' src={EWTlogo} alt="" />
+                                                    <img className='2xs:h-5 2xs:w-5 xs:h-6 xs:w-6 h-7 w-7 -translate-x-[6px]' src={shellcoin} alt="" />
+                                                </div>
                                             </div>
-                                        </div>
-                                    </button>
+                                        </button>
+                                    </div>
                                     <button onClick={unstakeAllUserCLP} className='my-1 2xs:my-[3px] 3xs:my-[2px] flex flex-row mx-auto bg-red-300 hover:brightness-110 rounded-xl sm:rounded-2xl md:rounded-2xl p-1 sm:p-2 md:p-3'>
                                         <h1 className='2xs:text-xs xs:text-sm text-base md:text-lg lg:text-xl text-center font-semibold flex my-auto'>Unstake all your CLP</h1>
                                         <div className='flex flex-row mx-auto'>
@@ -277,6 +351,9 @@ const Home = () => {
                                 )}
                             </div>
                         </div>
+                    </div>
+                    <div className='w-full flex justify-center'>
+                        <p className='3xs:text-xs xs:text-sm text-base absolute z-[300] translate-y-7 translate-x-2'>Powered by Synthetix <img className='inline aspect-square w-5' src={synthetix} /></p>
                     </div>
                 </div>)}
             </div>

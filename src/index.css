@@ -4,7 +4,7 @@
 
 .gradientAnimate {
   position: relative;
-  box-shadow: 0 20px 35px rgba(0,0,0,0.3);
+  box-shadow: 0 15px 25px rgba(0,0,0,0.25);
   overflow: hidden;
 }
 .gradientAnimate:before {
