@@ -298,19 +298,7 @@ const Home = () => {
                                     <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>Your SHL balance: {userSHLBalance}</h1>
                                     <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>Your CLP balance: {userCLPBalance}</h1>
                                 </div>
-                                <button onClick={claimAllLPRewards} className='my-1 2xs:my-[3px] 3xs:my-[2px] flex flex-row mx-auto bg-green-300 hover:brightness-110 rounded-xl sm:rounded-2xl md:rounded-2xl p-1 sm:p-2 md:p-3'>
-                                    <h1 className='2xs:text-xs xs:text-sm text-base md:text-lg lg:text-xl text-center font-semibold flex my-auto'>Claim all rewards</h1>
-                                    <div className='flex flex-row mx-auto'>
-                                        <img className='2xs:h-5 2xs:w-5 xs:h-6 xs:w-6 h-7 w-7 ml-1 xs:ml-[3px]' src={shellcoin} alt="" />
-                                    </div>
-                                </button>
-                                <div className='xs:my-[1px] s:my-[2px] my-[3px] flex flex-col'>
-                                    <div className='flex flex-col mx-auto mb-1'>
-                                        <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>Your earned SHL: <span style={colorStyle}>{userEarnedSHL}</span></h1>
-                                        <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>Your amount of staked CLP: {userStakedCLP}</h1>
-                                        <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>APY: {apyPercentage}</h1>
-                                    </div>
-                                    <button onClick={stakeAllUserCLP} className='my-1 2xs:my-[3px] 3xs:my-[2px] flex flex-row mx-auto bg-green-300 hover:brightness-110 rounded-xl sm:rounded-2xl md:rounded-2xl p-1 sm:p-2 md:p-3'>
+                                <button onClick={stakeAllUserCLP} className='my-1 2xs:my-[3px] 3xs:my-[2px] flex flex-row mx-auto bg-green-300 hover:brightness-110 rounded-xl sm:rounded-2xl md:rounded-2xl p-1 sm:p-2 md:p-3'>
                                         <h1 className='2xs:text-xs xs:text-sm text-base md:text-lg lg:text-xl text-center font-semibold flex my-auto'>Stake all your CLP</h1>
                                         <div className='flex flex-row mx-auto'>
                                             <img className='2xs:h-5 2xs:w-5 xs:h-6 xs:w-6 h-7 w-7 translate-x-[6px]' src={EWTlogo} alt="" />
@@ -336,7 +324,19 @@ const Home = () => {
                                             <img className='2xs:h-5 2xs:w-5 xs:h-6 xs:w-6 h-7 w-7 -translate-x-[6px]' src={shellcoin} alt="" />
                                         </div>
                                     </button>
+                                <div className='xs:my-[1px] s:my-[2px] my-[3px] flex flex-col'>
+                                    <div className='flex flex-col mx-auto mb-1'>
+                                        <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>Your staked CLP: {userStakedCLP}</h1>
+                                        <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>Your earned SHL: <span style={colorStyle}>{userEarnedSHL}</span></h1>
+                                        <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>APY: {apyPercentage}</h1>
+                                    </div>
                                 </div>
+                                <button onClick={claimAllLPRewards} className='my-1 2xs:my-[3px] 3xs:my-[2px] flex flex-row mx-auto bg-green-300 hover:brightness-110 rounded-xl sm:rounded-2xl md:rounded-2xl p-1 sm:p-2 md:p-3'>
+                                    <h1 className='2xs:text-xs xs:text-sm text-base md:text-lg lg:text-xl text-center font-semibold flex my-auto'>Claim all rewards</h1>
+                                    <div className='flex flex-row mx-auto'>
+                                        <img className='2xs:h-5 2xs:w-5 xs:h-6 xs:w-6 h-7 w-7 ml-1 xs:ml-[3px]' src={shellcoin} alt="" />
+                                    </div>
+                                </button>
                             </div>
                                 ) : (
                                     <div className='xs:my-[6px] s:my-[8px] my-[10px]'>
