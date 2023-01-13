@@ -326,11 +326,11 @@ const Home = () => {
                     <h2 className='text-red-500 mb-1 sm:mb-2 md:mb-3 text-base md:text-lg lg:text-xl text-center'>The farm will open up at 14-01-2023 15:00 UTC (any transactions other then approve will fail before that time)</h2>
                     <h2 className='mb-1 sm:mb-2 md:mb-3 text-base md:text-lg lg:text-xl text-center'>Here you can stake your EWT/SHL liquidity pool tokens to earn SHL!</h2>
                     <h2 className='text-base md:text-lg lg:text-xl text-center'>To get EWT/SHL liquidity pool tokens (CLP) you first need to provide liquidity on <img 
-                        className='inline h-6 w-6 mr-1 -translate-y-[2px]' src={susucoin} alt="" /><a className='text-blue-500 hover:text-purple-500' href='https://carbonswap.exchange/#/pool' rel='noreferer' to='_blank'>Carbonswap</a> for the pair EWT/SHL. Here you can find a quick guide on how to provide liquidity to Carbonswap: <a 
-                            className='text-blue-500 hover:text-purple-500' to="_blank" rel="noreferer" href="https://docs.unbound.finance/guides/guide-to-adding-liquidity-to-uniswap-v2">guide-to-adding-liquidity-to-uniswap-v2</a> (the tutorial is for Uniswap, but Carbonswap works very similar).
+                        className='inline h-6 w-6 mr-1 -translate-y-[2px]' src={susucoin} alt="" /><a className='text-blue-500 hover:text-purple-500' href='https://carbonswap.exchange/#/pool' rel='noreferer' target='_blank'>Carbonswap</a> for the pair EWT/SHL. Here you can find a quick guide on how to provide liquidity to Carbonswap: <a 
+                            className='text-blue-500 hover:text-purple-500' rel='noreferer' target='_blank' href="https://docs.unbound.finance/guides/guide-to-adding-liquidity-to-uniswap-v2">guide-to-adding-liquidity-to-uniswap-v2</a> (the tutorial is for Uniswap, but Carbonswap works very similar).
                     </h2>
                     <h2 className='mb-4 sm:mb-5 md:mb-6 lg:mb-7 text-base md:text-lg lg:text-xl text-center'>Also please understand the risks of 'impermanent loss' before providing liquidity: <a 
-                        className='text-blue-500 hover:text-purple-500' href='https://academy.binance.com/en/articles/impermanent-loss-explained' rel='noreferer' to='_blank'>Impermanent loss explained</a>
+                        className='text-blue-500 hover:text-purple-500' href='https://academy.binance.com/en/articles/impermanent-loss-explained' rel='noreferer' target='_blank'>Impermanent loss explained</a>
                     </h2>
                     <div className='flex items-center justify-center mx-auto gradientAnimate rounded-[2rem] md:rounded-[2.5rem] w-[95%] sm:w-[90%] md:w-[85%] lg:w-[70%] xl:w-[60%] 2xl:w-[50%] 3xl:w-[40%] aspect-[5/6]'>
                         <div className='flex flex-col relative z-[99] py-5 px-3 sm:py-6 sm:px-4 md:py-7 md:px-5'>
@@ -380,11 +380,11 @@ const Home = () => {
                     <h2 className='text-red-500 mb-1 sm:mb-2 md:mb-3 text-base md:text-lg lg:text-xl text-center'>The farm will open up at 14-01-2023 15:00 UTC (any transactions other then approve will fail before that time)</h2>
                     <h2 className='mb-1 sm:mb-2 md:mb-3 text-base md:text-lg lg:text-xl text-center'>Here you can stake your EWT/SHL liquidity pool tokens to earn SHL!</h2>
                     <h2 className='text-base md:text-lg lg:text-xl text-center'>To get EWT/SHL liquidity pool tokens (CLP) you first need to provide liquidity on <img 
-                        className='inline h-6 w-6 mr-1 -translate-y-[2px]' src={susucoin} alt="" /><a className='text-blue-500 hover:text-purple-500' href='https://carbonswap.exchange/#/pool' rel='noreferer' to='_blank'>Carbonswap</a> for the pair EWT/SHL. Here you can find a quick guide on how to provide liquidity to Carbonswap: <a 
-                            className='text-blue-500 hover:text-purple-500' to="_blank" rel="noreferer" href="https://docs.unbound.finance/guides/guide-to-adding-liquidity-to-uniswap-v2">guide-to-adding-liquidity-to-uniswap-v2</a> (the tutorial is for Uniswap, but Carbonswap works very similar).
+                        className='inline h-6 w-6 mr-1 -translate-y-[2px]' src={susucoin} alt="" /><a className='text-blue-500 hover:text-purple-500' href='https://carbonswap.exchange/#/pool' rel='noreferer' target='_blank'>Carbonswap</a> for the pair EWT/SHL. Here you can find a quick guide on how to provide liquidity to Carbonswap: <a 
+                            className='text-blue-500 hover:text-purple-500' rel='noreferer' target='_blank' href="https://docs.unbound.finance/guides/guide-to-adding-liquidity-to-uniswap-v2">guide-to-adding-liquidity-to-uniswap-v2</a> (the tutorial is for Uniswap, but Carbonswap works very similar).
                     </h2>
                     <h2 className='mb-4 sm:mb-5 md:mb-6 lg:mb-7 text-base md:text-lg lg:text-xl text-center'>Also please understand the risks of 'impermanent loss' before providing liquidity: <a 
-                        className='text-blue-500 hover:text-purple-500' href='https://academy.binance.com/en/articles/impermanent-loss-explained' rel='noreferer' to='_blank'>Impermanent loss explained</a>
+                        className='text-blue-500 hover:text-purple-500' href='https://academy.binance.com/en/articles/impermanent-loss-explained' rel='noreferer' target='_blank'>Impermanent loss explained</a>
                     </h2>
                     <div className='flex items-center justify-center mx-auto gradientAnimate rounded-[2rem] md:rounded-[2.5rem] w-[95%] sm:w-[90%] md:w-[85%] lg:w-[70%] xl:w-[60%] 2xl:w-[50%] 3xl:w-[40%] aspect-[5/6]'>
                         <div className='flex flex-col relative z-[99] py-5 px-3 sm:py-6 sm:px-4 md:py-7 md:px-5'>
