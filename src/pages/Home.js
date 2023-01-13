@@ -9,14 +9,20 @@ import shellcoin from '../assets/shellcoin.png';
 import walleticon from '../assets/walleticon.png';
 import susucoin from '../assets/susu.png';
 import synthetix from '../assets/synthetix.png';
+import work from '../assets/work.jpg';
+import turtlefarmicon from '../assets/tttlogofarm.png';
 import useColorChange from 'use-color-change';
 import store from '../redux/store';
+import Lightbox from "react-image-lightbox";
+import "react-image-lightbox/style.css";
+import { useQuery } from '@apollo/client';
+import { GET_LPDATA } from '../queries/lpdata';
 
 const Home = () => {
     /* global BigInt */
     const dispatch = useDispatch();
     const blockchain = useSelector((state) => state.blockchain);
-    const data = useSelector((state) => state.data);
+    const bcdata = useSelector((state) => state.data);
     const [CONFIG, SET_CONFIG] = useState({
         CONTRACT_ADDRESS: "",
         CONTRACT_ADDRESS_SHL: "",
@@ -71,27 +77,61 @@ const Home = () => {
     const [userHasApprovedCLP, setUserHasApprovedCLP] = useState(false);
     const [userEarnedSHL, setUserEarnedSHL] = useState("?");
     const [userStakedCLP, setUserStakedCLP] = useState("?");
-    const [apyPercentage, setApyPercentage] = useState("?%");
 
-    const hexToDecimal = hex => parseInt(hex, 16);
-    const [userSHLBalance, setUserSHLBalance] = useState(0)
+    const [userSHLBalance, setUserSHLBalance] = useState(0);
     const getUserSHLBalance = async () => {
         if (blockchain.account !== "") {
             const response = await fetch(
                 `https://volta-explorer.energyweb.org/api?module=account&action=tokenbalance&contractaddress=${CONFIG.CONTRACT_ADDRESS_SHL}&address=${String(blockchain.account)}`
             ).then((response) => response.json());
-            setUserSHLBalance((hexToDecimal(response["result"])/1000000000000000000).toFixed(2));
+            if (response["result"] !== null && response["result"] !== undefined) {
+                setUserSHLBalance(BigInt(response["result"])/BigInt(1e+18));
+            }
         }
     };
-    const [userCLPBalance, setUserCLPBalance] = useState(0)
+    const [userCLPBalance, setUserCLPBalance] = useState(0);
     const getUserCLPBalance = async () => {
         if (blockchain.account !== "") {
             const response = await fetch(
                 `https://volta-explorer.energyweb.org/api?module=account&action=tokenbalance&contractaddress=${CONFIG.CONTRACT_ADDRESS_CLP}&address=${String(blockchain.account)}`
             ).then((response) => response.json());
-            setUserCLPBalance((hexToDecimal(response["result"])/1000000000000000000).toFixed(2));
+            if (response["result"] !== null && response["result"] !== undefined) {
+                setUserCLPBalance(BigInt(response["result"])/BigInt(1e+18));
+            }
         }
     };
+
+    // Calculate the value of the CLP token
+    const [circulatingTokensCLP, setCirculatingTokensCLP] = useState(0);
+    const getCirculatingTokensCLP = async () => {
+        if (blockchain.account !== "") {
+            const response = await fetch(
+                `https://volta-explorer.energyweb.org/api?module=stats&action=tokensupply&contractaddress=${CONFIG.CONTRACT_ADDRESS_CLP}`
+            ).then((response) => response.json());
+            if (response["result"] !== null && response["result"] !== undefined) {
+                setCirculatingTokensCLP(BigInt(response["result"])/BigInt(1e+18));
+            }
+        }
+    };
+    useEffect(() => {
+        getCirculatingTokensCLP();
+    }, [blockchain.account]);
+    const [reserveUSD, setReserveUSD] = useState(0);
+    var { loading, error, data } = useQuery(GET_LPDATA);
+    useEffect(() => {
+        if (data !== undefined && data !== null) {
+            setReserveUSD(parseFloat(data["liquidityPositionSnapshots"][0]["reserveUSD"]).toFixed(3));
+        }
+    }, [loading]);
+
+    const [LPvaluePerToken, setLPvaluePerToken] = useState(0);
+    useEffect(() => {
+        if (parseFloat(reserveUSD) >= 0 && parseFloat(circulatingTokensCLP) >= 0) {
+            setLPvaluePerToken((parseFloat(reserveUSD)/parseFloat(circulatingTokensCLP)).toFixed(5));
+        }
+    }, [reserveUSD, circulatingTokensCLP]);
+    // --------------------------------------------------
+
     useEffect(() => {
         getUserSHLBalance();
         getUserCLPBalance();
@@ -99,12 +139,11 @@ const Home = () => {
 
     async function getEarnedRewards() {
         try {
-            console.log(data.account)
             let earned = await store
                 .getState()
-                .blockchain.smartContract.methods.earned(String(data.account))
+                .blockchain.smartContract.methods.earned(String(bcdata.account))
                 .call();
-            setUserEarnedSHL((earned / 1000000000000000000).toFixed(10))
+            setUserEarnedSHL(BigInt(earned)/BigInt(1e+18));
         } catch (error) {
             return;
         }
@@ -116,16 +155,20 @@ const Home = () => {
 
     async function getStakedCLP() {
         try {
-            console.log(data.account)
             let stakedCLP = await store
                 .getState()
-                .blockchain.smartContract.methods.balanceOf(String(data.account))
+                .blockchain.smartContract.methods.balanceOf(String(bcdata.account))
                 .call();
-                setUserStakedCLP((stakedCLP / 1000000000000000000).toFixed(6))
+                setUserStakedCLP(BigInt(stakedCLP)/BigInt(1e+18));
         } catch (error) {
             return;
         }
     }
+
+    useEffect(() => {
+        getEarnedRewards();
+        getStakedCLP();
+    }, [blockchain, bcdata]);
 
     setInterval(function () {
         getStakedCLP();
@@ -138,15 +181,10 @@ const Home = () => {
     });
 
     useEffect(() => {
-        if (parseInt(data.clpAllowance) > 100000000000000000) {
+        if (BigInt(bcdata.clpAllowance) > BigInt(1000000000000)) {
             setUserHasApprovedCLP(true);
         }
-    }, [data]);
-
-    console.log(blockchain.account)
-    console.log(userCLPBalance)
-
-    console.log(data)
+    }, [blockchain, bcdata]);
 
     async function approveSHLCLPtoContract() {
         let approveAmount = BigInt(10e+25);
@@ -158,7 +196,12 @@ const Home = () => {
                 from: blockchain.account,
                 value: totalCostWei,
                 gasPrice: 100000000,
-            })
+            }).then((receipt) => {
+                console.log(`Transaction receipt: ${receipt}`)
+                if (receipt["blockHash"] !== undefined && receipt["blockHash"] !== "") {
+                    setUserHasApprovedCLP(true);
+                }
+            });
     }
 
     async function claimAllLPRewards() {
@@ -173,47 +216,103 @@ const Home = () => {
             })
     }
 
+    const [isOpen, setIsOpen] = useState(false);
     async function stakeCustomAmount() {
         let customAmountCLP = document.getElementById('customAmountCLP').value
-        customAmountCLP = customAmountCLP * 1e+18;
+        customAmountCLP = BigInt(customAmountCLP * 1e+18);
+        console.log(`Staking: ${customAmountCLP} CLP`);
         let cost = 0;
         let totalCostWei = String(cost);
-        blockchain.smartContract.methods.stake(String(customAmountCLP))
+        blockchain.smartContract.methods.stake(customAmountCLP)
             .send({
                 to: CONFIG.CONTRACT_ADDRESS,
                 from: blockchain.account,
                 value: totalCostWei,
                 gasPrice: 100000000,
-            })
+            }).then((receipt) => {
+                console.log(`Transaction receipt: ${receipt}`)
+                if (receipt["blockHash"] !== undefined && receipt["blockHash"] !== "") {
+                    if ((BigInt(customAmountCLP) / BigInt(1e+18)) < 0.1) {
+                        setIsOpen(true);
+                    }
+                }
+                getUserSHLBalance();
+                getUserCLPBalance();
+            });
     }
 
     // ---------------------
     async function stakeAllUserCLP() {
-        let customAmountCLP = document.getElementById('customAmountCLP').value
         let cost = 0;
         let totalCostWei = String(cost);
-        blockchain.smartContract.methods.stake(String(customAmountCLP))
+        console.log(`Staking: ${BigInt(userCLPBalance)} CLP`);
+        blockchain.smartContract.methods.stake(BigInt(userCLPBalance))
             .send({
                 to: CONFIG.CONTRACT_ADDRESS,
                 from: blockchain.account,
                 value: totalCostWei,
                 gasPrice: 100000000,
+            }).then((receipt) => {
+                console.log(`Transaction receipt: ${receipt}`)
+                if (receipt["blockHash"] !== undefined && receipt["blockHash"] !== "") {
+                    if ((BigInt(userCLPBalance) / BigInt(1e+18)) < 0.1) {
+                        setIsOpen(true);
+                    }
+                }
+                getUserSHLBalance();
+                getUserCLPBalance();
             })
     }
     
     async function unstakeAllUserCLP() {
-        let customAmountCLP = document.getElementById('customAmountCLP').value
         let cost = 0;
         let totalCostWei = String(cost);
-        blockchain.smartContract.methods.stake(parseFloat(customAmountCLP))
+        blockchain.smartContract.methods.exit()
             .send({
                 to: CONFIG.CONTRACT_ADDRESS,
                 from: blockchain.account,
                 value: totalCostWei,
                 gasPrice: 100000000,
+            }).then((receipt) => {
+                console.log(`Transaction receipt: ${receipt}`)
+                getUserSHLBalance();
+                getUserCLPBalance();
             })
     }
     // ---------------------
+
+    // Get SHL price
+    const [shlPrice, setShlPrice] = useState(0);
+    useEffect(() => {
+        if (data !== undefined) {
+            setShlPrice(parseFloat(data["token"]["derivedETH"])/parseFloat(data["pair"]["token1Price"]))
+        }
+    }, [loading]);
+
+    console.log(bcdata)
+
+    // Calculate APY
+    const [apyPercentage, setApyPercentage] = useState("?");
+    async function calculateLP_APY() {
+        if (userStakedCLP !== '?' && userStakedCLP !== 0 && parseInt(bcdata.totalSupply) !== 0) {
+            let percentageUserOfPool = parseFloat(BigInt(BigInt(userStakedCLP)*BigInt(1e+18))/BigInt(bcdata.totalSupply));
+            let weiPerSecondOutput = BigInt(1e+18);
+            let userEarningsPerSecondInWei = weiPerSecondOutput*BigInt(percentageUserOfPool);
+            let userEarningsPerYearInWei = userEarningsPerSecondInWei*BigInt(60)*BigInt(60)*BigInt(24)*BigInt(365);
+            
+            let userEarningsPerYearInSHL = userEarningsPerYearInWei/BigInt(1e+18);
+            let userEarningsPerYearInUSD = parseFloat(userEarningsPerYearInSHL)*shlPrice
+
+            let userInvestmentInUSD = parseFloat(LPvaluePerToken)*parseFloat(userStakedCLP)
+
+            let calculatedAPY = (userEarningsPerYearInUSD/userInvestmentInUSD)*100;
+            setApyPercentage(calculatedAPY.toFixed(2));
+        }
+    }
+
+    useEffect(() => {
+        calculateLP_APY();
+    }, [userStakedCLP, bcdata.totalSupply, shlPrice, LPvaluePerToken]);
 
     return (
         <div className="flex flex-col mx-auto w-[96%] md:w-[88%] lg:w-[83%] xl:w-[76%] min-h-[100vh] py-4 sm:py-8 md:py-12 lg:py-16">
@@ -223,6 +322,8 @@ const Home = () => {
                 {blockchain.account === "" || blockchain.smartContract === null ? (
                 <div> {/* Unconnected */}
                     <h1 className='mb-1 sm:mb-2 md:mb-3 text-lg md:text-xl lg:text-2xl text-center'>Welcome to the <img></img>SeaShell<img className='inline h-6 w-6 ml-1 -translate-y-[2px]' src={shellcoin} alt="" /> liquidity farm!</h1>
+                    <img className='mx-auto mb-1 sm:mb-2 md:mb-3 aspect-square w-[8em] md:w-[11em] lg:w-[14em] rounded-3xl sm:rounded-[2rem] md:rounded-[2.5rem] lg:rounded-[3.0rem]' src={turtlefarmicon} />
+                    <h2 className='text-red-500 mb-1 sm:mb-2 md:mb-3 text-base md:text-lg lg:text-xl text-center'>The farm will open up at 14-01-2023 15:00 UTC (any transactions other then approve will fail before that time)</h2>
                     <h2 className='mb-1 sm:mb-2 md:mb-3 text-base md:text-lg lg:text-xl text-center'>Here you can stake your EWT/SHL liquidity pool tokens to earn SHL!</h2>
                     <h2 className='text-base md:text-lg lg:text-xl text-center'>To get EWT/SHL liquidity pool tokens (CLP) you first need to provide liquidity on <img 
                         className='inline h-6 w-6 mr-1 -translate-y-[2px]' src={susucoin} alt="" /><a className='text-blue-500 hover:text-purple-500' href='https://carbonswap.exchange/#/pool' rel='noreferer' to='_blank'>Carbonswap</a> for the pair EWT/SHL. Here you can find a quick guide on how to provide liquidity to Carbonswap: <a 
@@ -269,7 +370,14 @@ const Home = () => {
                 </div>
                 ) : (
                 <div className='p-2 sm:p-3 md:p-4'> {/* Connected */}
+                {isOpen && <Lightbox
+                    mainSrc={work}
+                    onCloseRequest={() => setIsOpen(false)}
+                    enableZoom={false}
+                />}
                     <h1 className='mb-1 sm:mb-2 md:mb-3 text-lg md:text-xl lg:text-2xl text-center'>Welcome <span className='bg-[rgba(100,100,240,0.15)] break-words px-1 rounded-md'>{blockchain.account}</span> to the SeaShell<img className='inline h-6 w-6 ml-1 -translate-y-[2px]' src={shellcoin} alt="" /> liquidity farm!</h1>
+                    <img className='mx-auto mb-1 sm:mb-2 md:mb-3 aspect-square w-[8em] md:w-[11em] lg:w-[14em] rounded-3xl sm:rounded-[2rem] md:rounded-[2.5rem] lg:rounded-[3.0rem]' src={turtlefarmicon} />
+                    <h2 className='text-red-500 mb-1 sm:mb-2 md:mb-3 text-base md:text-lg lg:text-xl text-center'>The farm will open up at 14-01-2023 15:00 UTC (any transactions other then approve will fail before that time)</h2>
                     <h2 className='mb-1 sm:mb-2 md:mb-3 text-base md:text-lg lg:text-xl text-center'>Here you can stake your EWT/SHL liquidity pool tokens to earn SHL!</h2>
                     <h2 className='text-base md:text-lg lg:text-xl text-center'>To get EWT/SHL liquidity pool tokens (CLP) you first need to provide liquidity on <img 
                         className='inline h-6 w-6 mr-1 -translate-y-[2px]' src={susucoin} alt="" /><a className='text-blue-500 hover:text-purple-500' href='https://carbonswap.exchange/#/pool' rel='noreferer' to='_blank'>Carbonswap</a> for the pair EWT/SHL. Here you can find a quick guide on how to provide liquidity to Carbonswap: <a 
@@ -295,10 +403,10 @@ const Home = () => {
                                 {userHasApprovedCLP === true ? (
                             <div>
                                 <div className='flex flex-col mx-auto mb-1'>
-                                    <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>Your SHL balance: {userSHLBalance}</h1>
-                                    <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>Your CLP balance: {userCLPBalance}</h1>
+                                    <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>Your SHL balance: {parseFloat((userSHLBalance.toString())).toFixed(2)}</h1>
+                                    <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>Your CLP balance: {parseFloat((userCLPBalance.toString())).toFixed(2)}</h1>
                                 </div>
-                                <button onClick={stakeAllUserCLP} className='my-1 2xs:my-[3px] 3xs:my-[2px] flex flex-row mx-auto bg-green-300 hover:brightness-110 rounded-xl sm:rounded-2xl md:rounded-2xl p-1 sm:p-2 md:p-3'>
+                                    <button onClick={stakeAllUserCLP} className='my-1 2xs:my-[3px] 3xs:my-[2px] flex flex-row mx-auto bg-green-300 hover:brightness-110 rounded-xl sm:rounded-2xl md:rounded-2xl p-1 sm:p-2 md:p-3'>
                                         <h1 className='2xs:text-xs xs:text-sm text-base md:text-lg lg:text-xl text-center font-semibold flex my-auto'>Stake all your CLP</h1>
                                         <div className='flex flex-row mx-auto'>
                                             <img className='2xs:h-5 2xs:w-5 xs:h-6 xs:w-6 h-7 w-7 translate-x-[6px]' src={EWTlogo} alt="" />
@@ -306,7 +414,7 @@ const Home = () => {
                                         </div>
                                     </button>
                                     <div className='flex flex-row'>
-                                        <input id='customAmountCLP' placeholder='amount to stake' className='border-gray-600 border-[3px] s:w-[160px] xs:w-[145px] 2xs:w-[125px] my-auto ml-1 mr-2 xs:mr-1 2xs:mx-[3px] 3xs:mx-[2px] rounded-md px-1 s:px-[3px] xs:px-[2px] 2xs:px-[1px]' type="text" />
+                                        <input id='customAmountCLP' placeholder='amount to stake' className='border-gray-600 border-[3px] s:w-[160px] xs:w-[145px] 2xs:w-[125px] my-auto ml-1 mr-2 xs:mr-1 2xs:mx-[3px] 3xs:mx-[2px] rounded-md px-1 s:px-[3px] xs:px-[2px] 2xs:px-[1px] py-[1px] sm:py-[2px] md:py-[3px]' type="text" />
                                         <button onClick={stakeCustomAmount} className='my-1 2xs:my-[3px] 3xs:my-[2px] flex flex-row mx-auto bg-green-300 hover:brightness-110 rounded-xl sm:rounded-2xl md:rounded-2xl p-1 sm:p-2 md:p-3'>
                                             <div className='flex flex-row my-auto'>
                                                 <h1 className='2xs:text-xs xs:text-sm text-base md:text-lg lg:text-xl text-center font-semibold flex my-auto'>Stake CLP</h1>
@@ -326,9 +434,9 @@ const Home = () => {
                                     </button>
                                 <div className='xs:my-[1px] s:my-[2px] my-[3px] flex flex-col'>
                                     <div className='flex flex-col mx-auto mb-1'>
-                                        <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>Your staked CLP: {userStakedCLP}</h1>
-                                        <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>Your earned SHL: <span style={colorStyle}>{userEarnedSHL}</span></h1>
-                                        <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>APY: {apyPercentage}</h1>
+                                        <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>Your staked CLP: {parseFloat((userStakedCLP.toString())).toFixed(4)}</h1>
+                                        <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>Your earned SHL: <span style={colorStyle}>{parseFloat((userEarnedSHL.toString())).toFixed(4)}</span></h1>
+                                        <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>APY: {apyPercentage}%</h1>
                                     </div>
                                 </div>
                                 <button onClick={claimAllLPRewards} className='my-1 2xs:my-[3px] 3xs:my-[2px] flex flex-row mx-auto bg-green-300 hover:brightness-110 rounded-xl sm:rounded-2xl md:rounded-2xl p-1 sm:p-2 md:p-3'>

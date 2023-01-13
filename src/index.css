@@ -43,3 +43,7 @@
 .bgimg {
   filter: blur(5px);
 }
+
+.__react_modal_image__header {
+  display: none;
+}

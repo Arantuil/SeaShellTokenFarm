@@ -2,8 +2,9 @@ const initialState = {
   loading: false,
   account: "",
   earned: 0,
-  rewardPerTokenStored: 0,
+  rewardPerToken: 0,
   clpAllowance: 0,
+  totalSupply: 0,
   error: false,
   errorMsg: "",
 };
@@ -23,8 +24,9 @@ const dataReducer = (state = initialState, action) => {
         loading: false,
         account: action.payload.account,
         earned: action.payload.earned,
-        rewardPerTokenStored: action.payload.rewardPerTokenStored,
+        rewardPerToken: action.payload.rewardPerToken,
         clpAllowance: action.payload.clpAllowance,
+        totalSupply: action.payload.totalSupply,
         error: false,
         errorMsg: "",
       };

@@ -19,5 +19,11 @@ module.exports = function override(config) {
         })
     ])
     config.ignoreWarnings = [/Failed to parse source map/];
+    config.module.rules.push({
+        test: /\.m?js/,
+        resolve: {
+            fullySpecified: false
+        }
+    })
     return config;
 }

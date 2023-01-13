@@ -30,21 +30,26 @@ export const fetchData = () => {
         .getState()
         .blockchain.smartContract.methods.earned(account)
         .call();
-      let rewardPerTokenStored = await store
+      let rewardPerToken = await store
         .getState()
-        .blockchain.smartContract.methods.rewardPerTokenStored()
+        .blockchain.smartContract.methods.rewardPerToken()
         .call();
       let clpAllowance = await store
         .getState()
-        .blockchain.clpSmartContract.methods.allowance(String(account), '0xB9637E7ab7358A0246d275786EE940Da12EE96A5')
+        .blockchain.clpSmartContract.methods.allowance(String(account), '0xd99A2f8CE0c503363f81484220113A9CAfE44DC3')
+        .call();
+      let totalSupply = await store
+        .getState()
+        .blockchain.smartContract.methods.totalSupply()
         .call();
 
       dispatch(
         fetchDataSuccess({
           account,
           earned,
-          rewardPerTokenStored,
+          rewardPerToken,
           clpAllowance,
+          totalSupply,
         })
       );
     } catch (err) {
