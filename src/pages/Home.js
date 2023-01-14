@@ -82,7 +82,7 @@ const Home = () => {
     const getUserSHLBalance = async () => {
         if (blockchain.account !== "") {
             const response = await fetch(
-                `https://volta-explorer.energyweb.org/api?module=account&action=tokenbalance&contractaddress=${CONFIG.CONTRACT_ADDRESS_SHL}&address=${String(blockchain.account)}`
+                `https://explorer.energyweb.org/api?module=account&action=tokenbalance&contractaddress=${CONFIG.CONTRACT_ADDRESS_SHL}&address=${String(blockchain.account)}`
             ).then((response) => response.json());
             if (response["result"] !== null && response["result"] !== undefined) {
                 setUserSHLBalance(BigInt(response["result"])/BigInt(1e+18));
@@ -93,7 +93,7 @@ const Home = () => {
     const getUserCLPBalance = async () => {
         if (blockchain.account !== "") {
             const response = await fetch(
-                `https://volta-explorer.energyweb.org/api?module=account&action=tokenbalance&contractaddress=${CONFIG.CONTRACT_ADDRESS_CLP}&address=${String(blockchain.account)}`
+                `https://explorer.energyweb.org/api?module=account&action=tokenbalance&contractaddress=${CONFIG.CONTRACT_ADDRESS_CLP}&address=${String(blockchain.account)}`
             ).then((response) => response.json());
             if (response["result"] !== null && response["result"] !== undefined) {
                 setUserCLPBalance(BigInt(response["result"])/BigInt(1e+18));
@@ -106,7 +106,7 @@ const Home = () => {
     const getCirculatingTokensCLP = async () => {
         if (blockchain.account !== "") {
             const response = await fetch(
-                `https://volta-explorer.energyweb.org/api?module=stats&action=tokensupply&contractaddress=${CONFIG.CONTRACT_ADDRESS_CLP}`
+                `https://explorer.energyweb.org/api?module=stats&action=tokensupply&contractaddress=${CONFIG.CONTRACT_ADDRESS_CLP}`
             ).then((response) => response.json());
             if (response["result"] !== null && response["result"] !== undefined) {
                 setCirculatingTokensCLP(BigInt(response["result"])/BigInt(1e+18));
@@ -323,7 +323,6 @@ const Home = () => {
                 <div> {/* Unconnected */}
                     <h1 className='mb-1 sm:mb-2 md:mb-3 text-lg md:text-xl lg:text-2xl text-center'>Welcome to the <img></img>SeaShell<img className='inline h-6 w-6 ml-1 -translate-y-[2px]' src={shellcoin} alt="" /> liquidity farm!</h1>
                     <img className='mx-auto mb-1 sm:mb-2 md:mb-3 aspect-square w-[8em] md:w-[11em] lg:w-[14em] rounded-3xl sm:rounded-[2rem] md:rounded-[2.5rem] lg:rounded-[3.0rem]' src={turtlefarmicon} />
-                    <h2 className='text-red-500 mb-1 sm:mb-2 md:mb-3 text-base md:text-lg lg:text-xl text-center'>The farm will open up at 14-01-2023 15:00 UTC (any transactions other then approve will fail before that time)</h2>
                     <h2 className='mb-1 sm:mb-2 md:mb-3 text-base md:text-lg lg:text-xl text-center'>Here you can stake your EWT/SHL liquidity pool tokens to earn SHL!</h2>
                     <h2 className='text-base md:text-lg lg:text-xl text-center'>To get EWT/SHL liquidity pool tokens (CLP) you first need to provide liquidity on <img 
                         className='inline h-6 w-6 mr-1 -translate-y-[2px]' src={susucoin} alt="" /><a className='text-blue-500 hover:text-purple-500' href='https://carbonswap.exchange/#/pool' rel='noreferer' target='_blank'>Carbonswap</a> for the pair EWT/SHL. Here you can find a quick guide on how to provide liquidity to Carbonswap: <a 
@@ -377,7 +376,6 @@ const Home = () => {
                 />}
                     <h1 className='mb-1 sm:mb-2 md:mb-3 text-lg md:text-xl lg:text-2xl text-center'>Welcome <span className='bg-[rgba(100,100,240,0.15)] break-words px-1 rounded-md'>{blockchain.account}</span> to the SeaShell<img className='inline h-6 w-6 ml-1 -translate-y-[2px]' src={shellcoin} alt="" /> liquidity farm!</h1>
                     <img className='mx-auto mb-1 sm:mb-2 md:mb-3 aspect-square w-[8em] md:w-[11em] lg:w-[14em] rounded-3xl sm:rounded-[2rem] md:rounded-[2.5rem] lg:rounded-[3.0rem]' src={turtlefarmicon} />
-                    <h2 className='text-red-500 mb-1 sm:mb-2 md:mb-3 text-base md:text-lg lg:text-xl text-center'>The farm will open up at 14-01-2023 15:00 UTC (any transactions other then approve will fail before that time)</h2>
                     <h2 className='mb-1 sm:mb-2 md:mb-3 text-base md:text-lg lg:text-xl text-center'>Here you can stake your EWT/SHL liquidity pool tokens to earn SHL!</h2>
                     <h2 className='text-base md:text-lg lg:text-xl text-center'>To get EWT/SHL liquidity pool tokens (CLP) you first need to provide liquidity on <img 
                         className='inline h-6 w-6 mr-1 -translate-y-[2px]' src={susucoin} alt="" /><a className='text-blue-500 hover:text-purple-500' href='https://carbonswap.exchange/#/pool' rel='noreferer' target='_blank'>Carbonswap</a> for the pair EWT/SHL. Here you can find a quick guide on how to provide liquidity to Carbonswap: <a 
