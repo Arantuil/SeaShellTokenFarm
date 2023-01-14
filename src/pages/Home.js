@@ -318,8 +318,9 @@ const Home = () => {
         let userEarningsPerYearInUSD = parseFloat(userEarningsPerYearInSHL)*shlPrice
 
         let userInvestmentInUSD = parseFloat(LPvaluePerToken)*parseFloat(userStakedCLP)
-        let calculatedAPY = (userEarningsPerYearInUSD/userInvestmentInUSD)*100;
-        setApyPercentage(calculatedAPY);
+        let calculatedAPY = ((userEarningsPerYearInUSD/1e+18)/userInvestmentInUSD)*100;
+
+        setApyPercentage(calculatedAPY.toFixed(2));
         } catch {return}
     }
 
