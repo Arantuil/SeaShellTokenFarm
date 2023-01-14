@@ -218,7 +218,14 @@ const Home = () => {
                 from: blockchain.account,
                 value: totalCostWei,
                 gasPrice: 100000000,
-            })
+            }).then((receipt) => {
+                console.log(`Transaction receipt: ${receipt}`)
+                if (receipt["blockHash"] !== undefined && receipt["blockHash"] !== "") {
+                    getUserSHLBalance();
+                    getUserCLPBalance();
+                }
+            });
+
     }
 
     const [isOpen, setIsOpen] = useState(false);
