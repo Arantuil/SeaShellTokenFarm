@@ -96,31 +96,29 @@ const Home = () => {
                 `https://explorer.energyweb.org/api?module=account&action=tokenbalance&contractaddress=${CONFIG.CONTRACT_ADDRESS_CLP}&address=${String(blockchain.account)}`
             ).then((response) => response.json());
             if (response["result"] !== null && response["result"] !== undefined) {
-                setUserCLPBalance(BigInt(response["result"])/BigInt(1e+18));
+                console.log(response["result"])
+                setUserCLPBalance(BigInt(response["result"]));
             }
         }
     };
 
     // Calculate the value of the CLP token
     const [circulatingTokensCLP, setCirculatingTokensCLP] = useState(0);
+    const [braveShieldError, setBraveShieldError] = useState(false);
     const getCirculatingTokensCLP = async () => {
-        if (blockchain.account !== "") {
-            //try {
-            //    const response = await fetch(
-            //        `https://explorer.energyweb.org/api?module=stats&action=tokensupply&contractaddress=${CONFIG.CONTRACT_ADDRESS_CLP}`
-            //    ).then((response) => response.json());
-            //    if (response["result"] !== null && response["result"] !== undefined) {
-            //        setCirculatingTokensCLP(BigInt(response["result"])/BigInt(1e+18));
-            //    }
-            //} catch {
-            //    setCirculatingTokensCLP(BigInt(17300))
-            //}
-            setCirculatingTokensCLP(BigInt(17300))
-        }
+        try {
+            const response = await fetch(
+                `https://explorer.energyweb.org/api?module=stats&action=tokensupply&contractaddress=${CONFIG.CONTRACT_ADDRESS_CLP}`
+            ).then((response) => response.json());
+            if (response["result"] !== null && response["result"] !== undefined) {
+                setCirculatingTokensCLP(BigInt(response["result"])/BigInt(1e+18));
+            }
+        } catch {setBraveShieldError(true)}
     };
     useEffect(() => {
         getCirculatingTokensCLP();
-    }, [blockchain.account]);
+    }, []);
+    
     const [reserveUSD, setReserveUSD] = useState(0);
     var { loading, error, data } = useQuery(GET_LPDATA);
     useEffect(() => {
@@ -244,7 +242,7 @@ const Home = () => {
             }).then((receipt) => {
                 console.log(`Transaction receipt: ${receipt}`)
                 if (receipt["blockHash"] !== undefined && receipt["blockHash"] !== "") {
-                    if ((BigInt(customAmountCLP) / BigInt(1e+18)) < 0.1) {
+                    if ((BigInt(customAmountCLP) / BigInt(1e+18)) <= 1) {
                         setIsOpen(true);
                     }
                 }
@@ -257,8 +255,8 @@ const Home = () => {
     async function stakeAllUserCLP() {
         let cost = 0;
         let totalCostWei = String(cost);
-        console.log(`Staking: ${BigInt(userCLPBalance)*BigInt(1e+18)} CLP`);
-        blockchain.smartContract.methods.stake(BigInt(userCLPBalance)*BigInt(1e+18))
+        console.log(`Staking: ${BigInt(userCLPBalance)} CLP`);
+        blockchain.smartContract.methods.stake(BigInt(userCLPBalance))
             .send({
                 to: CONFIG.CONTRACT_ADDRESS,
                 from: blockchain.account,
@@ -267,7 +265,7 @@ const Home = () => {
             }).then((receipt) => {
                 console.log(`Transaction receipt: ${receipt}`)
                 if (receipt["blockHash"] !== undefined && receipt["blockHash"] !== "") {
-                    if ((BigInt(userCLPBalance) / BigInt(1e+18)) < 0.1) {
+                    if (BigInt(userCLPBalance) / BigInt(1e+18) <= 1) {
                         setIsOpen(true);
                     }
                 }
@@ -309,7 +307,7 @@ const Home = () => {
     async function calculateLP_APY() {
         try {
         let percentageUserOfPool = parseFloat((BigInt(userStakedCLP)*BigInt(1e+18))/(BigInt(bcdata.totalSupply)/BigInt(1e+18)));
-        let weiPerSecondOutput = BigInt(1e+18);
+        let weiPerSecondOutput = BigInt(0.786*1e+18);
         let userEarningsPerSecondInWei = weiPerSecondOutput*(BigInt(percentageUserOfPool));
         let userEarningsPerYearInWei = userEarningsPerSecondInWei*BigInt(60)*BigInt(60)*BigInt(24)*BigInt(365);
         
@@ -326,7 +324,7 @@ const Home = () => {
 
     useEffect(() => {
         calculateLP_APY();
-    }, [userStakedCLP, bcdata.totalSupply, bcdata, shlPrice, LPvaluePerToken]);
+    }, [userStakedCLP, bcdata, shlPrice, LPvaluePerToken, blockchain]);
 
     return (
         <div className="flex flex-col mx-auto w-[96%] md:w-[88%] lg:w-[83%] xl:w-[76%] min-h-[100vh] py-4 sm:py-8 md:py-12 lg:py-16">
@@ -398,6 +396,11 @@ const Home = () => {
                     <h2 className='mb-4 sm:mb-5 md:mb-6 lg:mb-7 text-base md:text-lg lg:text-xl text-center'>Also please understand the risks of 'impermanent loss' before providing liquidity: <a 
                         className='text-blue-500 hover:text-purple-500' href='https://academy.binance.com/en/articles/impermanent-loss-explained' rel='noreferer' target='_blank'>Impermanent loss explained</a>
                     </h2>
+                    {braveShieldError === false ? ( 
+                        <></>
+                    ) : (
+                        <div className='text-[rgba(230,110,110)] mb-5 sm:mb-7 px-4 sm:px-8 md:px-16 text-center s:text-xs text-sm sm:text-base md:text-lg lg:text-xl mx-auto'>Your shield is blocking the requests to gather some of the statistics. You can take your Brave browser shield down🙂. There are no ads here.</div>
+                    )}
                     <div className='flex items-center justify-center mx-auto gradientAnimate rounded-[2rem] md:rounded-[2.5rem] w-[95%] sm:w-[90%] md:w-[85%] lg:w-[70%] xl:w-[60%] 2xl:w-[50%] 3xl:w-[40%] aspect-[8/10]'>
                         <div className='flex flex-col relative z-[99] py-5 px-3 sm:py-6 sm:px-4 md:py-7 md:px-5'>
                             <div className='flex flex-col'>
@@ -416,7 +419,7 @@ const Home = () => {
                             <div>
                                 <div className='flex flex-col mx-auto mb-1'>
                                     <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>Your SHL balance: {parseFloat((userSHLBalance.toString())).toFixed(2)}</h1>
-                                    <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>Your CLP balance: {parseFloat((userCLPBalance.toString())).toFixed(2)}</h1>
+                                    <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>Your CLP balance: {((parseFloat(userCLPBalance)/1e+18)).toFixed(5)}</h1>
                                 </div>
                                     <button onClick={stakeAllUserCLP} className='my-1 2xs:my-[3px] 3xs:my-[2px] flex flex-row mx-auto bg-green-300 hover:brightness-110 rounded-xl sm:rounded-2xl md:rounded-2xl p-1 sm:p-2 md:p-3'>
                                         <h1 className='2xs:text-xs xs:text-sm text-base md:text-lg lg:text-xl text-center font-semibold flex my-auto'>Stake all your CLP</h1>
@@ -448,7 +451,7 @@ const Home = () => {
                                     <div className='flex flex-col mx-auto mb-1'>
                                         <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>Your staked CLP: {parseFloat((userStakedCLP.toString())).toFixed(4)}</h1>
                                         <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>Your earned SHL: <span style={colorStyle}>{(parseFloat(userEarnedSHL)/100)}</span></h1>
-                                        <h1 className='xs:text-sm text-base md:text-lg lg:text-xl text-center text-gray-600'>Estimated daily SHL rewards: <span style={colorStyle}>{(userEstimatedEarningsPerDayInSHL/1e+18).toFixed(2)}</span></h1>
+                                        <h1 className='xs:text-sm text-base md:text-lg lg:text-xl text-center text-gray-600'>Estimated daily SHL rewards: <span style={colorStyle}>{(userEstimatedEarningsPerDayInSHL/1e+18/10).toFixed(2)}</span></h1>
                                         <h1 className='xs:text-base text-lg md:text-xl lg:text-2xl text-center font-semibold'>APY: {apyPercentage}%</h1>
                                     </div>
                                 </div>
